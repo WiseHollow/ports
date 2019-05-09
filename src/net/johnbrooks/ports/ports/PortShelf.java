@@ -25,31 +25,6 @@ class PortShelf {
      * @return Whether or not the port was inserted into at least 1 collection.
      */
     protected boolean insert(final Port port) {
-//            final Chunk portChunkA = port.getPointA().getChunk();
-//            final Chunk portChunkB = port.getPointB().getChunk();
-//
-//            // Insert for chunk A.
-//            boolean updated = insert(portChunkA, port);
-//
-//            if (!portChunkA.equals(portChunkB)) {
-//                // Insert for chunk B.
-//                insert(portChunkB, port);
-//            }
-//
-//            Location pointC = port.getPointA().clone();
-//            pointC.setX(port.getPointB().getZ());
-//            Location pointD = port.getPointB().clone();
-//            pointD.setZ(port.getPointB().getX());
-//
-//            if (!pointC.getChunk().equals(portChunkA) || !pointC.getChunk().equals(portChunkB)) {
-//                // Insert for chunk C.
-//                insert(pointC.getChunk(), port);
-//            }
-//            if (!pointD.getChunk().equals(portChunkA) || !pointD.getChunk().equals(portChunkB)) {
-//                // Insert for chunk D.
-//                insert(pointD.getChunk(), port);
-//            }
-
         final AtomicBoolean insertedSuccessfully = new AtomicBoolean();
         calculateChunksInPortCoverage(port).forEach(chunk -> {
             if (insert(chunk, port) && !insertedSuccessfully.get()) {
@@ -64,12 +39,26 @@ class PortShelf {
         calculateChunksInPortCoverage(port).forEach(chunk -> remove(chunk, port));
     }
 
+    /**
+     * Retrieves a list of chunks in the parameter of the port's reach.
+     * @param port
+     * @return
+     */
     protected List<Chunk> calculateChunksInPortCoverage(final Port port) {
         final Chunk chunkPointA = port.getPointA().getChunk();
         final Chunk chunkPointB = port.getPointB().getChunk();
-
-        final int totalChunks = (Math.abs(chunkPointA.getX() - chunkPointB.getZ()) + 1) * (Math.abs(chunkPointA.getZ() - chunkPointB.getZ()) + 1);
+        final int minX = Math.min(chunkPointA.getX(), chunkPointB.getX());
+        final int minZ = Math.min(chunkPointA.getZ(), chunkPointB.getZ());
+        final int distX = Math.abs(chunkPointA.getX() - chunkPointB.getX());
+        final int distZ = Math.abs(chunkPointA.getZ() - chunkPointB.getZ());
+        final int totalChunks = (distX + 1) * (distZ + 1);
         final List<Chunk> chunkList = new ArrayList<>(totalChunks);
+
+        for (int x = minX; x < minX + distX; x++) {
+            for (int z = minZ; z < minZ + distZ; z++) {
+                chunkList.add(chunkPointA.getWorld().getChunkAt(x, z));
+            }
+        }
 
         return chunkList;
     }
